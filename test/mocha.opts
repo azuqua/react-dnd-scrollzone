@@ -1,0 +1,4 @@
+--require babel-register
+--require test/setup
+--check-leaks
+--throw-deprecation

@@ -1,0 +1,10 @@
+{
+    "parser": "babel-eslint",
+    "extends": "airbnb",
+
+    "ecmaFeatures": {
+        "modules": true
+    },
+
+    "rules": {}
+}
