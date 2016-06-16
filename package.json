@@ -1,7 +1,7 @@
 {
   "name": "react-dnd-scrollzone",
-  "version": "0.1.0",
-  "description": "",
+  "version": "1.0.0",
+  "description": "A cross browser solution to scrolling during drag and drop.",
   "main": "lib/index.js",
   "scripts": {
     "build": "rm -rf lib && babel src --out-dir lib",
@@ -21,7 +21,16 @@
   "bugs": {
     "url": "http://github.com/azuqua/react-dnd-scrollzone/issues"
   },
-  "keywords": [],
+  "keywords": [
+    "react",
+    "drag",
+    "drop",
+    "scroll",
+    "dnd",
+    "drag and drop",
+    "polyfill",
+    "auto"
+  ],
   "author": {
     "name": "Nicholas Clawson",
     "email": "nickclaw@gmail.com",
@@ -29,7 +38,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "babel-preset-react": "^6.5.0",
     "lodash.throttle": "^4.0.1",
     "raf": "^3.2.0"
   },
@@ -37,6 +45,7 @@
     "babel-cli": "^6.4.5",
     "babel-eslint": "^6.0.4",
     "babel-preset-es2015": "^6.3.13",
+    "babel-preset-react": "^6.5.0",
     "babel-preset-stage-1": "^6.3.13",
     "babel-register": "^6.4.3",
     "chai": "^3.4.1",

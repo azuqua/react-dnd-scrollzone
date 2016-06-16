@@ -1,5 +1,5 @@
 import React from 'react';
-import throttle from 'lodash/throttle';
+import throttle from 'lodash.throttle';
 import raf from 'raf';
 
 function getHorizontalStrength({ left, width }, { clientX }, buffer) {
