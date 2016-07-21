@@ -59,12 +59,14 @@ export default class Scrollzone extends React.Component {
   attach() {
     window.document.body.addEventListener('dragover', this.updateScrolling);
     window.document.body.addEventListener('dragend', this.stopScrolling);
+    window.document.body.addEventListener('drop', this.stopScrolling);
     this.attached = true;
   }
 
   detach() {
     window.document.body.removeEventListener('dragover', this.updateScrolling);
     window.document.body.removeEventListener('dragend', this.stopScrolling);
+    window.document.body.removeEventListener('drop', this.stopScrolling);
     this.attached = false;
   }
 
