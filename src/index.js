@@ -133,12 +133,12 @@ export default class Scrollzone extends React.Component {
   }
 
   render() {
-    const { tag: Tag, className } = this.props;
+    const { tag: Tag, buffer, speed, className, ...props } = this.props;
     const compClass = className ? `${className} scrollzone` : 'scrollzone';
 
     return (
       <Tag
-        {...this.props}
+        {...props}
         className={compClass}
         onDragOver={this.handleDragOver}
         ref="container"

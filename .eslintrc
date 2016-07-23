@@ -6,5 +6,7 @@
         "modules": true
     },
 
-    "rules": {}
+    "rules": {
+        "no-unused-vars": [0]
+    }
 }
