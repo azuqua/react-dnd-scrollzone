@@ -4,8 +4,10 @@ import raf from 'raf';
 
 const DEFAULT_BUFFER = 150;
 
-export function createHorizontalStrength(buffer) {
+export function createHorizontalStrength(_buffer) {
   return function defaultHorizontalStrength({ x, w }, point) {
+    const buffer = Math.min(w / 2, _buffer);
+
     if (point.x >= x && point.x <= x + w) {
       if (point.x < x + buffer) {
         return (point.x - x - buffer) / buffer;
@@ -18,8 +20,10 @@ export function createHorizontalStrength(buffer) {
   };
 }
 
-export function createVerticalStrength(buffer) {
+export function createVerticalStrength(_buffer) {
   return function defaultVerticalStrength({ y, h }, point) {
+    const buffer = Math.min(h / 2, _buffer);
+
     if (point.y >= y && point.y <= y + h) {
       if (point.y < y + buffer) {
         return (point.y - y - buffer) / buffer;
