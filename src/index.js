@@ -2,44 +2,54 @@ import React from 'react';
 import throttle from 'lodash.throttle';
 import raf from 'raf';
 
-function getHorizontalStrength({ left, width }, { clientX }, buffer) {
-  if (clientX >= left && clientX <= left + width) {
-    if (clientX < left + buffer) {
-      return (clientX - left - buffer) / buffer;
-    } else if (clientX > (left + width - buffer)) {
-      return -(left + width - clientX - buffer) / buffer;
-    }
-  }
+const DEFAULT_BUFFER = 150;
 
-  return 0;
+export function createHorizontalStrength(buffer) {
+  return function defaultHorizontalStrength({ x, w }, point) {
+    if (point.x >= x && point.x <= x + w) {
+      if (point.x < x + buffer) {
+        return (point.x - x - buffer) / buffer;
+      } else if (point.x > (x + w - buffer)) {
+        return -(x + w - point.x - buffer) / buffer;
+      }
+    }
+
+    return 0;
+  };
 }
 
-function getVerticalStrength({ top, height }, { clientY }, buffer) {
-  if (clientY >= top && clientY <= top + height) {
-    if (clientY < top + buffer) {
-      return (clientY - top - buffer) / buffer;
-    } else if (clientY > (top + height - buffer)) {
-      return -(top + height - clientY - buffer) / buffer;
+export function createVerticalStrength(buffer) {
+  return function defaultVerticalStrength({ y, h }, point) {
+    if (point.y >= y && point.y <= y + h) {
+      if (point.y < y + buffer) {
+        return (point.y - y - buffer) / buffer;
+      } else if (point.y > (y + h - buffer)) {
+        return -(y + h - point.y - buffer) / buffer;
+      }
     }
-  }
 
-  return 0;
+    return 0;
+  };
 }
+
+export const defaultHorizontalStrength = createHorizontalStrength(DEFAULT_BUFFER);
+
+export const defaultVerticalStrength = createVerticalStrength(DEFAULT_BUFFER);
 
 export default class Scrollzone extends React.Component {
 
   static propTypes = {
+    verticalStrength: React.PropTypes.func,
+    horizontalStrength: React.PropTypes.func,
     tag: React.PropTypes.string,
-    buffer: React.PropTypes.number,
     speed: React.PropTypes.number,
-    onDragOver: React.PropTypes.func,
-    className: React.PropTypes.string,
   }
 
   static defaultProps = {
-    tag: 'div',
-    buffer: 150,
+    verticalStrength: defaultVerticalStrength,
+    horizontalStrength: defaultHorizontalStrength,
     speed: 30,
+    tag: 'div',
   };
 
   constructor(props, ctx) {
@@ -85,13 +95,14 @@ export default class Scrollzone extends React.Component {
   // Update scaleX and scaleY every 100ms or so
   // and start scrolling if necessary
   updateScrolling = throttle(evt => {
-    const { buffer } = this.props;
     const { container } = this.refs;
-    const rect = container.getBoundingClientRect();
+    const { left: x, top: y, width: w, height: h } = container.getBoundingClientRect();
+    const box = { x, y, w, h };
+    const coords = { x: evt.clientX, y: evt.clientY };
 
     // calculate strength
-    this.scaleX = getHorizontalStrength(rect, evt, buffer);
-    this.scaleY = getVerticalStrength(rect, evt, buffer);
+    this.scaleX = this.props.horizontalStrength(box, coords);
+    this.scaleY = this.props.verticalStrength(box, coords);
 
     // start scrolling if we need to
     if (!this.frame && (this.scaleX || this.scaleY)) this.startScrolling();
@@ -133,7 +144,7 @@ export default class Scrollzone extends React.Component {
   }
 
   render() {
-    const { tag: Tag, buffer, speed, className, ...props } = this.props;
+    const { tag: Tag, speed, className, ...props } = this.props;
     const compClass = className ? `${className} scrollzone` : 'scrollzone';
 
     return (
