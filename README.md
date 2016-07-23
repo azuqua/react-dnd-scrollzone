@@ -33,42 +33,36 @@ export default App(props) {
 
 ```js
 import React from 'react';
-import Scrollzone, { defaultHorizontalStrength, defaultVerticalStrength } from 'react-dnd-scrollzone';
+import Scrollzone, { createHorizontalStrength, createVerticalStrength } from 'react-dnd-scrollzone';
 
 import DraggableItem from './path/to/DraggableItem';
 
-const scrollStyle = {
-  overflowX: 'scroll',
-  overflowY: 'scroll',
-}
+const linearHorizontalStrength = createHorizontalStrength(150);
 
-/**
- * @param {Number}  val - from -1 to 1
- * @return {Number} val - from -1 to 1
- */
+const linearVerticalStrength = createVerticalStrength(150);
+
+// this easing function is from https://gist.github.com/gre/1650294 and
+// expects/returns a number between [0, 1], however strength functions
+// expects/returns a value between [-1, 1]
 function ease(val) {
-  // this easing function is from https://gist.github.com/gre/1650294 and
-  // expects/returns a number between [0, 1], however strength functions
-  // expects/returns a value between [-1, 1]
-
   const t = val / 2 + 1; // [-1, 1] -> [0, 1]
   const easedT = t<.5 ? 2*t*t : -1+(4-2*t)*t;
   return easedT * 2 - 1; // [0, 1] -> [-1, 1]
 }
 
-function horizontalStrength(box, point) {
-  return ease(defaultHorizontalStrength(box, point));
+function hStrength(box, point) {
+  return ease(linearHorizontalStrength(box, point));
 }
 
-function verticalStrength(box, point) {
-  return ease(defaultVerticalStrength(box, point));
+function vStrength(box, point) {
+  return ease(linearVerticalStrength(box, point));
 }
 
 export default App(props) {
   return (
     <main>
       <header />
-      <Scrollzone style={scrollStyle} verticalStrength={verticalStrength} horizontalStrength={horizontalStrength} >
+      <Scrollzone verticalStrength={vStrength} horizontalStrength={hStrength} >
         <DraggableItem />
         <DraggableItem />
         <DraggableItem />
@@ -108,23 +102,9 @@ They should return a value between -1 and 1.
  * Positive values scroll down or right.
  * 0 stops all scrolling.
 
-#### `defaultVerticalStrength(box, point) -> Number`
-The default vertical strength generating function. It linearly scales the
-strength of vertical scroll as the cursor approaches a boundary.
-
-Returns between -1 and 0 if the cursor is within 150 pixels of the top, and
-returns between 0 and 1 if the cursor is within 150 pixels of the bottom.
-
-#### `defaultHorizontalStrength(box, point) -> Number`
-The default horizontal strength generating function. It linearly scales the
-strength of horizontal scroll as the cursor approaches a boundary.
-
-Returns between -1 and 0 if the cursor is within 150 pixels of the left, and
-returns between 0 and 1 if the cursor is within 150 pixels of the right.
-
 #### `createVerticalStrength(buffer)` and `createHorizontalStrength(buffer)`
 
-These allow you to create their respective strength functions using a sensitivity different than 150px. This replaces the old `buffer` prop.
+These allow you to create linearly scaling strength functions with a sensitivity different than the default value of 150px. This replaces the old `buffer` prop.
 
 ##### Example
 
