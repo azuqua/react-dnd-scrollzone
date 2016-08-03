@@ -148,7 +148,16 @@ export default class Scrollzone extends React.Component {
   }
 
   render() {
-    const { tag: Tag, speed, className, ...props } = this.props;
+    const {
+      // not passing down these props
+      tag: Tag,
+      speed,
+      verticalStrength,
+      horizontalStrength,
+
+      className,
+      ...props,
+    } = this.props;
     const compClass = className ? `${className} scrollzone` : 'scrollzone';
 
     return (
