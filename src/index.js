@@ -86,9 +86,9 @@ export default class Scrollzone extends React.Component {
 
   // we don't care about the body's dragover events until this
   // component gets dragged over for the first time
-  handleDragOver = (evt) => {
+  handleDragOver = (evt, ...rest) => {
     // give users a chance to preventDefault
-    if (typeof this.props.onDragOver === 'function') this.props.onDragOver(evt);
+    if (typeof this.props.onDragOver === 'function') this.props.onDragOver(evt, ...rest);
 
     if (!this.attached) {
       this.attach();
