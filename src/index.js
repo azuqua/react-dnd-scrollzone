@@ -2,6 +2,8 @@ import React from 'react';
 import { findDOMNode } from 'react-dom';
 import throttle from 'lodash.throttle';
 import raf from 'raf';
+import getDisplayName from 'react-display-name';
+import hoist from 'hoist-non-react-statics';
 
 const DEFAULT_BUFFER = 150;
 
@@ -41,15 +43,17 @@ export const defaultHorizontalStrength = createHorizontalStrength(DEFAULT_BUFFER
 
 export const defaultVerticalStrength = createVerticalStrength(DEFAULT_BUFFER);
 
-// Export Higher Order DND-Scroll Component
-export default function Scrollzone(WrappedComponent) {
-  return class extends React.Component {
+
+export default function createScrollingComponent(WrappedComponent) {
+  class ScrollingComponent extends React.Component {
+
+    static displayName = `Scrolling(${getDisplayName(WrappedComponent)})`;
 
     static propTypes = {
       verticalStrength: React.PropTypes.func,
       horizontalStrength: React.PropTypes.func,
-      speed: React.PropTypes.number
-    }
+      speed: React.PropTypes.number,
+    };
 
     static defaultProps = {
       verticalStrength: defaultVerticalStrength,
@@ -168,5 +172,7 @@ export default function Scrollzone(WrappedComponent) {
         />
       );
     }
-  };
+  }
+
+  return hoist(ScrollingComponent, WrappedComponent);
 }

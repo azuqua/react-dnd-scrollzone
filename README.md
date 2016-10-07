@@ -6,10 +6,10 @@ Cross browser compatible scrolling containers for drag and drop interactions.
 
 ```js
 import React from 'react';
-import Scrollzone from 'react-dnd-scrollzone';
+import withScrolling from 'react-dnd-scrollzone';
 import DraggableItem from './path/to/DraggableItem';
 
-const ScrollZone = Scrollzone('ul');
+const ScrollZone = withScrolling('ul');
 const scrollStyle = {
   overflowX: 'scroll',
   overflowY: 'scroll',
@@ -33,10 +33,10 @@ export default App(props) {
 
 ```js
 import React from 'react';
-import Scrollzone, { createHorizontalStrength, createVerticalStrength } from 'react-dnd-scrollzone';
+import withScrolling, { createHorizontalStrength, createVerticalStrength } from 'react-dnd-scrollzone';
 import DraggableItem from './path/to/DraggableItem';
 
-const ScrollZone = Scrollzone('ul');
+const ScrollZone = withScrolling('ul');
 const linearHorizontalStrength = createHorizontalStrength(150);
 const linearVerticalStrength = createVerticalStrength(150);
 
@@ -74,14 +74,14 @@ export default App(props) {
 
 ### API
 
-#### `Scrollzone`
+#### `withScrolling`
 
 A React higher order component with the following properties:
 
 ```js
-const ScrollZone = Scrollzone(String|Component);
+const ScrollZone = withScrolling(String|Component);
 
-<Scrollzone
+<ScrollZone
   verticalStrength={Function}
   horizontalStrength={Function}
   speed={Number} >
@@ -90,7 +90,7 @@ const ScrollZone = Scrollzone(String|Component);
 
 </Scrollzone>
 ```
-Apply the scrollzone function to any html-identifier ("div", "ul" etc) or react component to add drag and drop scrolling behaviour.
+Apply the withScrolling function to any html-identifier ("div", "ul" etc) or react component to add drag and drop scrolling behaviour.
 
  * `verticalStrength` - a function that returns the strength of the vertical scroll direction
  * `horizontalStrength` a function that returns the strength of the horizontal scroll direction
@@ -110,9 +110,9 @@ These allow you to create linearly scaling strength functions with a sensitivity
 ##### Example
 
 ```js
-import Scrollzone, { createVerticalStrength, createHorizontalStrength } from 'react-dnd-scrollzone';
+import withScrolling, { createVerticalStrength, createHorizontalStrength } from 'react-dnd-scrollzone';
 
-const ScrollZone = Scrollzone('ul');
+const ScrollZone = withScrolling('ul');
 const vStrength = createVerticalStrength(500);
 const hStrength = createHorizontalStrength(300);
 
@@ -133,14 +133,14 @@ Since react-dnd-scrollzone utilizes the Higher Order Components (HOC) pattern, d
 
 ```js
 import React from 'react';
-import Scrollzone, { createVerticalStrength } from 'react-dnd-scrollzone';
+import withScrolling, { createVerticalStrength } from 'react-dnd-scrollzone';
 import { List } from 'react-virtualized';
 import DraggableItem from './path/to/DraggableItem';
 
 // creates array with 1000 entries
 const testArray = Array.from(Array(1000)).map((e,i)=>'Item '+i);
 
-const ScrollZoneVirtualList = Scrollzone(List);
+const ScrollZoneVirtualList = withScrolling(List);
 const vStrength = createVerticalStrength(200);
 
 export default App(props) {
@@ -148,20 +148,19 @@ export default App(props) {
     <main>
       <header />
       <ScrollZoneVirtualList
-              verticalStrength={vStrength}
-              horizontalStrength={ ()=>{} }
-              speed={200}
-              height={600}
-              width={800}
-              rowCount={testArray.length}
-              rowHeight={34}
-              rowRenderer={
-                ({ key, index, style }) => {
-                  return <DraggableItem key={key} style={style} content={testArray[index]}/>
-                }
-              }
-             >
-      </ScrollZoneVirtualList>
+        verticalStrength={vStrength}
+        horizontalStrength={ ()=>{} }
+        speed={200}
+        height={600}
+        width={800}
+        rowCount={testArray.length}
+        rowHeight={34}
+        rowRenderer={
+          ({ key, index, style }) => {
+            return <DraggableItem key={key} style={style} content={testArray[index]}/>
+          }
+        }
+       />
     </main>
   );
 }
