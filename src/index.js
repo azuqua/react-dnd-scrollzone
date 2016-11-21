@@ -4,6 +4,7 @@ import throttle from 'lodash.throttle';
 import raf from 'raf';
 import getDisplayName from 'react-display-name';
 import hoist from 'hoist-non-react-statics';
+import { noop, intBetween } from './util';
 
 const DEFAULT_BUFFER = 150;
 
@@ -50,12 +51,14 @@ export default function createScrollingComponent(WrappedComponent) {
     static displayName = `Scrolling(${getDisplayName(WrappedComponent)})`;
 
     static propTypes = {
+      onScrollChange: React.PropTypes.func,
       verticalStrength: React.PropTypes.func,
       horizontalStrength: React.PropTypes.func,
       speed: React.PropTypes.number,
     };
 
     static defaultProps = {
+      onScrollChange: noop,
       verticalStrength: defaultVerticalStrength,
       horizontalStrength: defaultHorizontalStrength,
       speed: 30,
@@ -122,24 +125,50 @@ export default function createScrollingComponent(WrappedComponent) {
     }, 100, { trailing: false })
 
     startScrolling() {
-      const { speed } = this.props;
-
       let i = 0;
       const tick = () => {
-        const { scaleX, scaleY } = this;
-        if (scaleX || scaleY) {
-          // there's a bug in safari where it seems like we can't get
-          // dragover events from a container that also emits a scroll
-          // event that same frame. So we double the speed and only adjust
-          // the scroll position at 30fps
-          if (i++ % 2) {
-            if (scaleX) this.container.scrollLeft += Math.floor(scaleX * speed);
-            if (scaleY) this.container.scrollTop += Math.floor(scaleY * speed);
-          }
-          this.frame = raf(tick);
-        } else {
+        const { scaleX, scaleY, container } = this;
+        const { speed, onScrollChange } = this.props;
+
+        // stop scrolling if there's nothing to do
+        if (speed === 0 || scaleX + scaleY === 0) {
           this.stopScrolling();
+          return;
         }
+
+        // there's a bug in safari where it seems like we can't get
+        // dragover events from a container that also emits a scroll
+        // event that same frame. So we double the speed and only adjust
+        // the scroll position at 30fps
+        if (i++ % 2) {
+          const {
+            scrollLeft,
+            scrollTop,
+            scrollWidth,
+            scrollHeight,
+            clientWidth,
+            clientHeight,
+          } = container;
+
+          const newLeft = scaleX
+            ? container.scrollLeft = intBetween(
+              0,
+              scrollWidth - clientWidth,
+              scrollLeft + scaleX * speed
+            )
+            : scrollLeft;
+
+          const newTop = scaleY
+            ? container.scrollTop = intBetween(
+              0,
+              scrollHeight - clientHeight,
+              scrollTop + scaleY * speed
+            )
+            : scrollTop;
+
+          onScrollChange(newLeft, newTop);
+        }
+        this.frame = raf(tick);
       };
 
       tick();
@@ -161,6 +190,7 @@ export default function createScrollingComponent(WrappedComponent) {
         speed,
         verticalStrength,
         horizontalStrength,
+        onScrollChange,
 
         ...props,
       } = this.props;

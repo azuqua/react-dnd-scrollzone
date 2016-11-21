@@ -82,18 +82,19 @@ A React higher order component with the following properties:
 const ScrollZone = withScrolling(String|Component);
 
 <ScrollZone
-  verticalStrength={Function}
   horizontalStrength={Function}
+  verticalStrength={Function}
+  onScrollChange={Function}
   speed={Number} >
 
   {children}
-
 </Scrollzone>
 ```
 Apply the withScrolling function to any html-identifier ("div", "ul" etc) or react component to add drag and drop scrolling behaviour.
 
- * `verticalStrength` - a function that returns the strength of the vertical scroll direction
  * `horizontalStrength` a function that returns the strength of the horizontal scroll direction
+ * `verticalStrength` - a function that returns the strength of the vertical scroll direction
+ * `onScrollChange` - a function that is called when `scrollLeft` or `scrollTop` of the component are changed. Called with those two arguments in that order.
  * `speed` - strength multiplier, play around with this (default 30)
 
 The strength functions are both called with two arguments. An object representing the rectangle occupied by the Scrollzone, and an object representing the coordinates of mouse.
