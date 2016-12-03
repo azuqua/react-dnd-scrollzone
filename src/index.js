@@ -45,7 +45,8 @@ export const defaultHorizontalStrength = createHorizontalStrength(DEFAULT_BUFFER
 export const defaultVerticalStrength = createVerticalStrength(DEFAULT_BUFFER);
 
 
-export default function createScrollingComponent(WrappedComponent) {
+export default function createScrollingComponent(WrappedComponent,
+    options = {wrappingDragLayer: false}) {
   class ScrollingComponent extends React.Component {
 
     static displayName = `Scrolling(${getDisplayName(WrappedComponent)})`;
@@ -71,11 +72,16 @@ export default function createScrollingComponent(WrappedComponent) {
       this.scaleY = 0;
       this.frame = null;
       this.attached = false;
+      this.isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
     }
 
     componentDidMount() {
-      this.container = findDOMNode(this.wrappedInstance);
-      this.container.addEventListener('dragover', this.handleDragOver);
+      this.container = options.wrappingDragLayer ?
+        document.scrollingElement : findDOMNode(this.wrappedInstance);
+
+      if (this.isFirefox || !options.wrappingDragLayer) {
+        this.container.addEventListener('dragover', this.handleDragOver);
+      }
     }
 
     componentWillUnmount() {
@@ -84,17 +90,21 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     attach() {
-      window.document.body.addEventListener('dragover', this.updateScrolling);
-      window.document.body.addEventListener('dragend', this.stopScrolling);
-      window.document.body.addEventListener('drop', this.stopScrolling);
-      this.attached = true;
+      if (this.isFirefox || !options.wrappingDragLayer) {
+        window.addEventListener('dragover', this.updateScrolling);
+        window.addEventListener('dragend', this.stopScrolling);
+        window.addEventListener('drop', this.stopScrolling);
+        this.attached = true;
+      }
     }
 
     detach() {
-      window.document.body.removeEventListener('dragover', this.updateScrolling);
-      window.document.body.removeEventListener('dragend', this.stopScrolling);
-      window.document.body.removeEventListener('drop', this.stopScrolling);
-      this.attached = false;
+      if (this.isFirefox || !options.wrappingDragLayer) {
+        window.removeEventListener('dragover', this.updateScrolling);
+        window.removeEventListener('dragend', this.stopScrolling);
+        window.removeEventListener('drop', this.stopScrolling);
+        this.attached = false;
+      }
     }
 
     // we don't care about the body's dragover events until this
@@ -113,7 +123,7 @@ export default function createScrollingComponent(WrappedComponent) {
     // and start scrolling if necessary
     updateScrolling = throttle(evt => {
       const { left: x, top: y, width: w, height: h } = this.container.getBoundingClientRect();
-      const box = { x, y, w, h };
+      const box = { x, y: (options.wrappingDragLayer ? 0 : y), w, h };
       const coords = { x: evt.clientX, y: evt.clientY };
 
       // calculate strength
