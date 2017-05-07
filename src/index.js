@@ -64,6 +64,8 @@ export default function createScrollingComponent(WrappedComponent) {
       speed: 30,
     };
 
+    static contextTypes = { dragDropManager: React.PropTypes.object };
+
     constructor(props, ctx) {
       super(props, ctx);
 
@@ -71,19 +73,46 @@ export default function createScrollingComponent(WrappedComponent) {
       this.scaleY = 0;
       this.frame = null;
       this.attached = false;
+      this.state = {
+        isDragging: false,
+      };
     }
 
     componentDidMount() {
       this.container = findDOMNode(this.wrappedInstance);
+      this.container.addEventListener('touchmove', this.handleDragOver);
       this.container.addEventListener('dragover', this.handleDragOver);
+
+      this.clearMonitorSubscription =
+        this.context
+          .dragDropManager
+          .getMonitor()
+          .subscribeToStateChange(() => this.handleMonitorChange());
     }
 
     componentWillUnmount() {
-      if (this.frame) raf.cancel(this.frame);
+      this.clearMonitorSubscription();
+      if (this.frame) { raf.cancel(this.frame); }
       this.detach();
     }
 
+    getCoords(evt) {
+      if (evt.type === 'touchmove') {
+        return { x: evt.changedTouches[0].clientX, y: evt.changedTouches[0].clientY };
+      }
+
+      return { x: evt.clientX, y: evt.clientY };
+    }
+
+    handleMonitorChange() {
+      const isDragging = this.context.dragDropManager.getMonitor().isDragging();
+      if (this.state.isDragging !== isDragging) {
+        this.setState({ isDragging });
+      }
+    }
+
     attach() {
+      window.document.body.addEventListener('touchmove', this.updateScrolling);
       window.document.body.addEventListener('dragover', this.updateScrolling);
       window.document.body.addEventListener('dragend', this.stopScrolling);
       window.document.body.addEventListener('drop', this.stopScrolling);
@@ -91,6 +120,7 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     detach() {
+      window.document.body.removeEventListener('touchmove', this.updateScrolling);
       window.document.body.removeEventListener('dragover', this.updateScrolling);
       window.document.body.removeEventListener('dragend', this.stopScrolling);
       window.document.body.removeEventListener('drop', this.stopScrolling);
@@ -101,7 +131,7 @@ export default function createScrollingComponent(WrappedComponent) {
     // component gets dragged over for the first time
     handleDragOver = (evt, ...rest) => {
       // give users a chance to preventDefault
-      if (typeof this.props.onDragOver === 'function') this.props.onDragOver(evt, ...rest);
+      if (typeof this.props.onDragOver === 'function') { this.props.onDragOver(evt, ...rest); }
 
       if (!this.attached) {
         this.attach();
@@ -114,14 +144,16 @@ export default function createScrollingComponent(WrappedComponent) {
     updateScrolling = throttle(evt => {
       const { left: x, top: y, width: w, height: h } = this.container.getBoundingClientRect();
       const box = { x, y, w, h };
-      const coords = { x: evt.clientX, y: evt.clientY };
+      const coords = this.getCoords(evt);
 
       // calculate strength
       this.scaleX = this.props.horizontalStrength(box, coords);
       this.scaleY = this.props.verticalStrength(box, coords);
 
       // start scrolling if we need to
-      if (!this.frame && (this.scaleX || this.scaleY)) this.startScrolling();
+      if (this.state.isDragging && !this.frame && (this.scaleX || this.scaleY)) {
+        this.startScrolling();
+      }
     }, 100, { trailing: false })
 
     startScrolling() {
@@ -131,7 +163,7 @@ export default function createScrollingComponent(WrappedComponent) {
         const { speed, onScrollChange } = this.props;
 
         // stop scrolling if there's nothing to do
-        if (speed === 0 || scaleX + scaleY === 0) {
+        if (speed === 0 || scaleX + scaleY === 0 || !this.state.isDragging) {
           this.stopScrolling();
           return;
         }
