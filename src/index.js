@@ -80,8 +80,8 @@ export default function createScrollingComponent(WrappedComponent) {
 
     componentDidMount() {
       this.container = findDOMNode(this.wrappedInstance);
-      this.container.addEventListener('touchmove', this.handleDragOver);
       this.container.addEventListener('dragover', this.handleDragOver);
+      window.document.body.addEventListener('touchmove', this.handleTouchMove);
 
       this.clearMonitorSubscription =
         this.context
@@ -93,6 +93,7 @@ export default function createScrollingComponent(WrappedComponent) {
     componentWillUnmount() {
       this.clearMonitorSubscription();
       if (this.frame) { raf.cancel(this.frame); }
+      window.document.body.removeEventListener('touchmove', this.handleTouchMove);
       this.detach();
     }
 
@@ -104,15 +105,7 @@ export default function createScrollingComponent(WrappedComponent) {
       return { x: evt.clientX, y: evt.clientY };
     }
 
-    handleMonitorChange() {
-      const isDragging = this.context.dragDropManager.getMonitor().isDragging();
-      if (this.state.isDragging !== isDragging) {
-        this.setState({ isDragging });
-      }
-    }
-
     attach() {
-      window.document.body.addEventListener('touchmove', this.updateScrolling);
       window.document.body.addEventListener('dragover', this.updateScrolling);
       window.document.body.addEventListener('dragend', this.stopScrolling);
       window.document.body.addEventListener('drop', this.stopScrolling);
@@ -120,7 +113,6 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     detach() {
-      window.document.body.removeEventListener('touchmove', this.updateScrolling);
       window.document.body.removeEventListener('dragover', this.updateScrolling);
       window.document.body.removeEventListener('dragend', this.stopScrolling);
       window.document.body.removeEventListener('drop', this.stopScrolling);
@@ -136,6 +128,20 @@ export default function createScrollingComponent(WrappedComponent) {
       if (!this.attached) {
         this.attach();
         this.updateScrolling(evt);
+      }
+    }
+
+    // we need to catch touchmove events
+    handleTouchMove = (evt, ...rest) => {
+      // give users a chance to preventDefault
+      if (typeof this.props.onDragOver === 'function') { this.props.onDragOver(evt, ...rest); }
+      this.updateScrolling(evt);
+    }
+
+    handleMonitorChange() {
+      const isDragging = this.context.dragDropManager.getMonitor().isDragging();
+      if (this.state.isDragging !== isDragging) {
+        this.setState({ isDragging });
       }
     }
 
