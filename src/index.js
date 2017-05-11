@@ -65,7 +65,9 @@ export default function createScrollingComponent(WrappedComponent) {
       speed: 30,
     };
 
-    static contextTypes = { dragDropManager: React.PropTypes.object };
+    static contextTypes = {
+      dragDropManager: PropTypes.object,
+    };
 
     constructor(props, ctx) {
       super(props, ctx);
@@ -74,18 +76,12 @@ export default function createScrollingComponent(WrappedComponent) {
       this.scaleY = 0;
       this.frame = null;
       this.attached = false;
-      this.state = {
-        isDragging: false,
-      };
     }
 
     componentDidMount() {
       this.container = findDOMNode(this.wrappedInstance);
-      this.container.addEventListener('dragover', this.handleDragOver);
-      window.document.body.addEventListener('touchmove', this.handleTouchMove);
 
-      this.clearMonitorSubscription =
-        this.context
+      this.clearMonitorSubscription = this.context
           .dragDropManager
           .getMonitor()
           .subscribeToStateChange(() => this.handleMonitorChange());
@@ -93,9 +89,7 @@ export default function createScrollingComponent(WrappedComponent) {
 
     componentWillUnmount() {
       this.clearMonitorSubscription();
-      if (this.frame) { raf.cancel(this.frame); }
-      window.document.body.removeEventListener('touchmove', this.handleTouchMove);
-      this.detach();
+      this.stopScrolling();
     }
 
     getCoords(evt) {
@@ -107,42 +101,24 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     attach() {
-      window.document.body.addEventListener('dragover', this.updateScrolling);
-      window.document.body.addEventListener('dragend', this.stopScrolling);
-      window.document.body.addEventListener('drop', this.stopScrolling);
       this.attached = true;
+      window.document.body.addEventListener('mousemove', this.updateScrolling);
+      window.document.body.addEventListener('touchmove', this.updateScrolling);
     }
 
     detach() {
-      window.document.body.removeEventListener('dragover', this.updateScrolling);
-      window.document.body.removeEventListener('dragend', this.stopScrolling);
-      window.document.body.removeEventListener('drop', this.stopScrolling);
       this.attached = false;
-    }
-
-    // we don't care about the body's dragover events until this
-    // component gets dragged over for the first time
-    handleDragOver = (evt, ...rest) => {
-      // give users a chance to preventDefault
-      if (typeof this.props.onDragOver === 'function') { this.props.onDragOver(evt, ...rest); }
-
-      if (!this.attached) {
-        this.attach();
-        this.updateScrolling(evt);
-      }
-    }
-
-    // we need to catch touchmove events
-    handleTouchMove = (evt, ...rest) => {
-      // give users a chance to preventDefault
-      if (typeof this.props.onDragOver === 'function') { this.props.onDragOver(evt, ...rest); }
-      this.updateScrolling(evt);
+      window.document.body.removeEventListener('mousemove', this.updateScrolling);
+      window.document.body.removeEventListener('touchmove', this.updateScrolling);
     }
 
     handleMonitorChange() {
       const isDragging = this.context.dragDropManager.getMonitor().isDragging();
-      if (this.state.isDragging !== isDragging) {
-        this.setState({ isDragging });
+
+      if (!this.attached && isDragging) {
+        this.attach();
+      } else if (this.attached && !isDragging) {
+        this.stopScrolling();
       }
     }
 
@@ -158,7 +134,7 @@ export default function createScrollingComponent(WrappedComponent) {
       this.scaleY = this.props.verticalStrength(box, coords);
 
       // start scrolling if we need to
-      if (this.state.isDragging && !this.frame && (this.scaleX || this.scaleY)) {
+      if (!this.frame && (this.scaleX || this.scaleY)) {
         this.startScrolling();
       }
     }, 100, { trailing: false })
@@ -170,14 +146,14 @@ export default function createScrollingComponent(WrappedComponent) {
         const { speed, onScrollChange } = this.props;
 
         // stop scrolling if there's nothing to do
-        if (speed === 0 || scaleX + scaleY === 0 || !this.state.isDragging) {
+        if (speed === 0 || scaleX + scaleY === 0) {
           this.stopScrolling();
           return;
         }
 
         // there's a bug in safari where it seems like we can't get
-        // dragover events from a container that also emits a scroll
-        // event that same frame. So we double the speed and only adjust
+        // mousemove events from a container that also emits a scroll
+        // event that same frame. So we double the strengthMultiplier and only adjust
         // the scroll position at 30fps
         if (i++ % 2) {
           const {
@@ -214,12 +190,13 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     stopScrolling = () => {
+      this.detach();
+      this.scaleX = 0;
+      this.scaleY = 0;
+
       if (this.frame) {
-        this.detach();
         raf.cancel(this.frame);
         this.frame = null;
-        this.scaleX = 0;
-        this.scaleY = 0;
       }
     }
 
