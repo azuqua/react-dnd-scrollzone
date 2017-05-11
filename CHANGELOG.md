@@ -1,5 +1,11 @@
 # Changelog
 
+### `v4.0.0`
+* Change `speed` prop to `strengthMultiplier`
+* Adds a hard dependency on using `react-dnd` which was theoretically
+  optional before.
+* Fix double dispatch of `onDragOver` prop
+
 ### `v3.2.0`
 * Use `prop-types` package instead of deprecated `React.PropTypes`
 

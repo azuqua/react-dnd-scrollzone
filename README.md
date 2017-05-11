@@ -2,43 +2,50 @@
 
 Cross browser compatible scrolling containers for drag and drop interactions.
 
-### Basic Example
+### [Basic Example](./examples/basic)
 
 ```js
-import React from 'react';
+import React, { Component } from 'react';
+import { DragDropContextProvider } from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
 import withScrolling from 'react-dnd-scrollzone';
-import DraggableItem from './path/to/DraggableItem';
+import DragItem from './DragItem';
+import './App.css';
 
-const ScrollZone = withScrolling('ul');
-const scrollStyle = {
-  overflowX: 'scroll',
-  overflowY: 'scroll',
-}
+const ScrollingComponent = withScrolling('div');
 
-export default App(props) {
-  return (
-    <main>
-      <header />
-      <Scrollzone style={scrollStyle} >
-        <DraggableItem />
-        <DraggableItem />
-        <DraggableItem />
-      </Scrollzone>
-    </main>
-  );
+const ITEMS = [1,2,3,4,5,6,7,8,9,10];
+
+export default class App extends Component {
+  render() {
+    return (
+      <DragDropContextProvider backend={HTML5Backend}>
+        <ScrollingComponent className="App">
+          {ITEMS.map(n => (
+            <DragItem key={n} label={`Item ${n}`} />
+          ))}
+        </ScrollingComponent>
+      </DragDropContextProvider>
+    );
+  }
 }
 ```
 
 ### Easing Example
 
 ```js
-import React from 'react';
+import React, { Component } from 'react';
+import { DragDropContextProvider } from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
 import withScrolling, { createHorizontalStrength, createVerticalStrength } from 'react-dnd-scrollzone';
-import DraggableItem from './path/to/DraggableItem';
+import DragItem from './DragItem';
+import './App.css';
+
 
 const ScrollZone = withScrolling('ul');
 const linearHorizontalStrength = createHorizontalStrength(150);
 const linearVerticalStrength = createVerticalStrength(150);
+const ITEMS = [1,2,3,4,5,6,7,8,9,10];
 
 // this easing function is from https://gist.github.com/gre/1650294 and
 // expects/returns a number between [0, 1], however strength functions
@@ -59,14 +66,60 @@ function vStrength(box, point) {
 
 export default App(props) {
   return (
-    <main>
-      <header />
-      <Scrollzone verticalStrength={vStrength} horizontalStrength={hStrength} >
-        <DraggableItem />
-        <DraggableItem />
-        <DraggableItem />
-      </Scrollzone>
-    </main>
+    <DragDropContextProvider backend={HTML5Backend}>
+      <ScrollingComponent
+        className="App"
+        verticalStrength={vStrength}
+        horizontalStrength={hStrength} >
+
+        {ITEMS.map(n => (
+          <DragItem key={n} label={`Item ${n}`} />
+        ))}
+      </ScrollingComponent>
+    </DragDropContextProvider>
+  );
+}
+```
+
+### Virtualized Example
+
+Since react-dnd-scrollzone utilizes the Higher Order Components (HOC) pattern, drag and drop scrolling behaviour can easily be added to existing components. For example to speedup huge lists by using [react-virtualized](https://github.com/bvaughn/react-virtualized) for a windowed view where only the visible rows are rendered:
+
+```js
+import React from 'react';
+import { DragDropContextProvider } from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
+import withScrolling from 'react-dnd-scrollzone';
+import { List } from 'react-virtualized';
+import DragItem from './DragItem';
+import './App.css';
+
+const ScrollingVirtualList = withScrolling(List);
+
+// creates array with 1000 entries
+const ITEMS = Array.from(Array(1000)).map((e,i)=> `Item ${i}`);
+
+
+export default App(props) {
+  return (
+    <DragDropContextProvider backend={HTML5Backend}>
+      <ScrollingVirtualList
+        className="App"
+        height={600}
+        width={800}
+        rowCount={ITEMS.length}
+        rowHeight={34}
+        rowRenderer={
+          ({ key, index, style }) => (
+            <DragItem
+              key={key}
+              style={style}
+              label={ITEMS[index]}
+            />
+          )
+        }
+       />
+    </DragDropContextProvider>
   );
 }
 ```
@@ -82,10 +135,10 @@ A React higher order component with the following properties:
 const ScrollZone = withScrolling(String|Component);
 
 <ScrollZone
+  strengthMultiplier={Number}
   horizontalStrength={Function}
   verticalStrength={Function}
-  onScrollChange={Function}
-  speed={Number} >
+  onScrollChange={Function} >
 
   {children}
 </Scrollzone>
@@ -94,8 +147,8 @@ Apply the withScrolling function to any html-identifier ("div", "ul" etc) or rea
 
  * `horizontalStrength` a function that returns the strength of the horizontal scroll direction
  * `verticalStrength` - a function that returns the strength of the vertical scroll direction
+ * `strengthMultiplier` - strength multiplier, play around with this (default 30)
  * `onScrollChange` - a function that is called when `scrollLeft` or `scrollTop` of the component are changed. Called with those two arguments in that order.
- * `speed` - strength multiplier, play around with this (default 30)
 
 The strength functions are both called with two arguments. An object representing the rectangle occupied by the Scrollzone, and an object representing the coordinates of mouse.
 
@@ -106,14 +159,14 @@ They should return a value between -1 and 1.
 
 #### `createVerticalStrength(buffer)` and `createHorizontalStrength(buffer)`
 
-These allow you to create linearly scaling strength functions with a sensitivity different than the default value of 150px. This replaces the old `buffer` prop.
+These allow you to create linearly scaling strength functions with a sensitivity different than the default value of 150px.
 
 ##### Example
 
 ```js
 import withScrolling, { createVerticalStrength, createHorizontalStrength } from 'react-dnd-scrollzone';
 
-const ScrollZone = withScrolling('ul');
+const Scrollzone = withScrolling('ul');
 const vStrength = createVerticalStrength(500);
 const hStrength = createHorizontalStrength(300);
 
@@ -124,45 +177,4 @@ const zone = (
 
   </Scrollzone>
 );
-```
-
-#### Add DND scrolling to existing components
-
-Since react-dnd-scrollzone utilizes the Higher Order Components (HOC) pattern, drag and drop scrolling behaviour can easily be added to existing components. For example to speedup huge lists by using [react-virtualized](https://github.com/bvaughn/react-virtualized) for a windowed view where only the visible rows are rendered:
-
-##### Example
-
-```js
-import React from 'react';
-import withScrolling, { createVerticalStrength } from 'react-dnd-scrollzone';
-import { List } from 'react-virtualized';
-import DraggableItem from './path/to/DraggableItem';
-
-// creates array with 1000 entries
-const testArray = Array.from(Array(1000)).map((e,i)=>'Item '+i);
-
-const ScrollZoneVirtualList = withScrolling(List);
-const vStrength = createVerticalStrength(200);
-
-export default App(props) {
-  return (
-    <main>
-      <header />
-      <ScrollZoneVirtualList
-        verticalStrength={vStrength}
-        horizontalStrength={ ()=>{} }
-        speed={200}
-        height={600}
-        width={800}
-        rowCount={testArray.length}
-        rowHeight={34}
-        rowRenderer={
-          ({ key, index, style }) => {
-            return <DraggableItem key={key} style={style} content={testArray[index]}/>
-          }
-        }
-       />
-    </main>
-  );
-}
 ```
