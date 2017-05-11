@@ -1,11 +1,12 @@
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import { DragSource } from 'react-dnd';
 import './DragItem.css';
 
 class DragItem extends PureComponent {
 
   static propTypes = {
-    label: React.PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
   };
 
   render() {

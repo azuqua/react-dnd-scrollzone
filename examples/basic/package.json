@@ -6,6 +6,7 @@
     "react-scripts": "0.9.5"
   },
   "dependencies": {
+    "prop-types": "^15.5.9",
     "react": "^15.5.4",
     "react-dnd": "^2.4.0",
     "react-dnd-html5-backend": "^2.4.1",
