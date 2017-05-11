@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { findDOMNode } from 'react-dom';
 import throttle from 'lodash.throttle';
 import raf from 'raf';
@@ -46,15 +47,15 @@ export const defaultVerticalStrength = createVerticalStrength(DEFAULT_BUFFER);
 
 
 export default function createScrollingComponent(WrappedComponent) {
-  class ScrollingComponent extends React.Component {
+  class ScrollingComponent extends Component {
 
     static displayName = `Scrolling(${getDisplayName(WrappedComponent)})`;
 
     static propTypes = {
-      onScrollChange: React.PropTypes.func,
-      verticalStrength: React.PropTypes.func,
-      horizontalStrength: React.PropTypes.func,
-      speed: React.PropTypes.number,
+      onScrollChange: PropTypes.func,
+      verticalStrength: PropTypes.func,
+      horizontalStrength: PropTypes.func,
+      speed: PropTypes.number,
     };
 
     static defaultProps = {

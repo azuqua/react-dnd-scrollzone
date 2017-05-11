@@ -40,6 +40,7 @@
   "dependencies": {
     "hoist-non-react-statics": "^1.2.0",
     "lodash.throttle": "^4.0.1",
+    "prop-types": "^15.5.9",
     "raf": "^3.2.0",
     "react-display-name": "^0.2.0"
   },
