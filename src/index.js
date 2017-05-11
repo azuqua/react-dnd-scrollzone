@@ -55,14 +55,14 @@ export default function createScrollingComponent(WrappedComponent) {
       onScrollChange: PropTypes.func,
       verticalStrength: PropTypes.func,
       horizontalStrength: PropTypes.func,
-      speed: PropTypes.number,
+      strengthMultiplier: PropTypes.number,
     };
 
     static defaultProps = {
       onScrollChange: noop,
       verticalStrength: defaultVerticalStrength,
       horizontalStrength: defaultHorizontalStrength,
-      speed: 30,
+      strengthMultiplier: 30,
     };
 
     static contextTypes = {
@@ -143,10 +143,10 @@ export default function createScrollingComponent(WrappedComponent) {
       let i = 0;
       const tick = () => {
         const { scaleX, scaleY, container } = this;
-        const { speed, onScrollChange } = this.props;
+        const { strengthMultiplier, onScrollChange } = this.props;
 
         // stop scrolling if there's nothing to do
-        if (speed === 0 || scaleX + scaleY === 0) {
+        if (strengthMultiplier === 0 || scaleX + scaleY === 0) {
           this.stopScrolling();
           return;
         }
@@ -169,7 +169,7 @@ export default function createScrollingComponent(WrappedComponent) {
             ? container.scrollLeft = intBetween(
               0,
               scrollWidth - clientWidth,
-              scrollLeft + scaleX * speed
+              scrollLeft + scaleX * strengthMultiplier
             )
             : scrollLeft;
 
@@ -177,7 +177,7 @@ export default function createScrollingComponent(WrappedComponent) {
             ? container.scrollTop = intBetween(
               0,
               scrollHeight - clientHeight,
-              scrollTop + scaleY * speed
+              scrollTop + scaleY * strengthMultiplier
             )
             : scrollTop;
 
@@ -203,7 +203,7 @@ export default function createScrollingComponent(WrappedComponent) {
     render() {
       const {
         // not passing down these props
-        speed,
+        strengthMultiplier,
         verticalStrength,
         horizontalStrength,
         onScrollChange,
