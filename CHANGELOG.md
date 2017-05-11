@@ -1,5 +1,29 @@
 # Changelog
 
+### `v3.2.0`
+* Use `prop-types` package instead of deprecated `React.PropTypes`
+
+### `v3.1.0`
+* Add `onScrollChange` prop
+
+### `v3.0.0`
+* Export a higher order component instead of a component.
+* Set displayName on component
+* Hoist non-react static properties
+
+##### Before (v2)
+```js
+import Scrollzone from 'react-dnd-scrollzone';
+const zone = <Scrollzone />;
+```
+
+##### After (v3)
+```js
+import withScrolling from 'react-dnd-scrollzone';
+const Scrollzone = withScrolling('div');
+const zone = <Scrollzone />;
+```
+
 ### `v2.0.0`
 * Remove `buffer` prop.
 * Add `horizontalStrength` and `verticalStrength` props.
