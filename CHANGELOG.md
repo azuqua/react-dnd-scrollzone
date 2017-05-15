@@ -5,6 +5,8 @@
 * Adds a hard dependency on using `react-dnd` which was theoretically
   optional before.
 * Fix double dispatch of `onDragOver` prop
+* Default strength functions always return 0 if the point is anywhere
+  outside the box.
 
 ### `v3.2.0`
 * Use `prop-types` package instead of deprecated `React.PropTypes`

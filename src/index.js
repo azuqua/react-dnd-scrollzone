@@ -5,15 +5,17 @@ import throttle from 'lodash.throttle';
 import raf from 'raf';
 import getDisplayName from 'react-display-name';
 import hoist from 'hoist-non-react-statics';
-import { noop, intBetween } from './util';
+import { noop, intBetween, getCoords } from './util';
 
 const DEFAULT_BUFFER = 150;
 
 export function createHorizontalStrength(_buffer) {
-  return function defaultHorizontalStrength({ x, w }, point) {
+  return function defaultHorizontalStrength({ x, w, y, h }, point) {
     const buffer = Math.min(w / 2, _buffer);
+    const inRange = point.x >= x && point.x <= x + w;
+    const inBox = inRange && point.y >= y && point.y <= y + h;
 
-    if (point.x >= x && point.x <= x + w) {
+    if (inBox) {
       if (point.x < x + buffer) {
         return (point.x - x - buffer) / buffer;
       } else if (point.x > (x + w - buffer)) {
@@ -26,10 +28,12 @@ export function createHorizontalStrength(_buffer) {
 }
 
 export function createVerticalStrength(_buffer) {
-  return function defaultVerticalStrength({ y, h }, point) {
+  return function defaultVerticalStrength({ y, h, x, w }, point) {
     const buffer = Math.min(h / 2, _buffer);
+    const inRange = point.y >= y && point.y <= y + h;
+    const inBox = inRange && point.x >= x && point.x <= x + w;
 
-    if (point.y >= y && point.y <= y + h) {
+    if (inBox) {
       if (point.y < y + buffer) {
         return (point.y - y - buffer) / buffer;
       } else if (point.y > (y + h - buffer)) {
@@ -75,11 +79,17 @@ export default function createScrollingComponent(WrappedComponent) {
       this.scaleX = 0;
       this.scaleY = 0;
       this.frame = null;
+
       this.attached = false;
+      this.dragging = false;
     }
 
     componentDidMount() {
       this.container = findDOMNode(this.wrappedInstance);
+      this.container.addEventListener('dragover', this.handleEvent);
+      // touchmove events don't seem to work across siblings, so we unfortunately
+      // have to attach the listeners to the body
+      window.document.body.addEventListener('touchmove', this.handleEvent);
 
       this.clearMonitorSubscription = this.context
           .dragDropManager
@@ -88,38 +98,40 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     componentWillUnmount() {
+      this.container.removeEventListener('dragover', this.handleEvent);
+      window.document.body.removeEventListener('touchmove', this.handleEvent);
       this.clearMonitorSubscription();
       this.stopScrolling();
     }
 
-    getCoords(evt) {
-      if (evt.type === 'touchmove') {
-        return { x: evt.changedTouches[0].clientX, y: evt.changedTouches[0].clientY };
+    handleEvent = (evt) => {
+      if (this.dragging && !this.attached) {
+        this.attach();
+        this.updateScrolling(evt);
       }
-
-      return { x: evt.clientX, y: evt.clientY };
-    }
-
-    attach() {
-      this.attached = true;
-      window.document.body.addEventListener('mousemove', this.updateScrolling);
-      window.document.body.addEventListener('touchmove', this.updateScrolling);
-    }
-
-    detach() {
-      this.attached = false;
-      window.document.body.removeEventListener('mousemove', this.updateScrolling);
-      window.document.body.removeEventListener('touchmove', this.updateScrolling);
     }
 
     handleMonitorChange() {
       const isDragging = this.context.dragDropManager.getMonitor().isDragging();
 
-      if (!this.attached && isDragging) {
-        this.attach();
-      } else if (this.attached && !isDragging) {
+      if (!this.dragging && isDragging) {
+        this.dragging = true;
+      } else if (this.dragging && !isDragging) {
+        this.dragging = false;
         this.stopScrolling();
       }
+    }
+
+    attach() {
+      this.attached = true;
+      window.document.body.addEventListener('dragover', this.updateScrolling);
+      window.document.body.addEventListener('touchmove', this.updateScrolling);
+    }
+
+    detach() {
+      this.attached = false;
+      window.document.body.removeEventListener('dragover', this.updateScrolling);
+      window.document.body.removeEventListener('touchmove', this.updateScrolling);
     }
 
     // Update scaleX and scaleY every 100ms or so
@@ -127,7 +139,7 @@ export default function createScrollingComponent(WrappedComponent) {
     updateScrolling = throttle(evt => {
       const { left: x, top: y, width: w, height: h } = this.container.getBoundingClientRect();
       const box = { x, y, w, h };
-      const coords = this.getCoords(evt);
+      const coords = getCoords(evt);
 
       // calculate strength
       this.scaleX = this.props.horizontalStrength(box, coords);
@@ -189,7 +201,7 @@ export default function createScrollingComponent(WrappedComponent) {
       tick();
     }
 
-    stopScrolling = () => {
+    stopScrolling() {
       this.detach();
       this.scaleX = 0;
       this.scaleY = 0;

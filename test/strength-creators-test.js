@@ -24,6 +24,11 @@ describe('strength functions', function() {
       expect(hFn(box, { x: 450, y: 0 })).to.equal(0);
     });
 
+    it('should return 0 when outside the box', function() {
+      expect(hFn(box, { x: 0, y: -100 })).to.equal(0);
+      expect(hFn(box, { x: 0, y: 900 })).to.equal(0);
+    });
+
     it('should scale linearly from the boundary to respective buffer', function() {
       expect(hFn(box, { x: 75, y: 0 })).to.equal(-.5);
       expect(hFn(box, { x: 525, y: 0 })).to.equal(.5);
@@ -50,6 +55,11 @@ describe('strength functions', function() {
     it('should return 0 when at the buffer boundary', function() {
       expect(vFn(box, { x: 0, y: 150 })).to.equal(0);
       expect(vFn(box, { x: 0, y: 450 })).to.equal(0);
+    });
+
+    it('should return 0 when outside the box', function() {
+      expect(vFn(box, { x: -100, y: 0 })).to.equal(0);
+      expect(vFn(box, { x: 900, y: 0 })).to.equal(0);
     });
 
     it('should scale linearly from the boundary to respective buffer', function() {
