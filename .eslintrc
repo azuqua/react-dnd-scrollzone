@@ -1,13 +1,14 @@
 {
-    "parser": "babel-eslint",
-    "extends": "airbnb",
+  "parser": "babel-eslint",
+  "extends": "airbnb",
 
-    "ecmaFeatures": {
-        "modules": true
-    },
-
-    "rules": {
-        "no-unused-vars": [0],
-        "react/prop-types": [0]
-    }
+  "ecmaFeatures": {
+    "modules": true
+  },
+  "env": {
+    "browser": true
+  },
+  "rules": {
+    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }]
+  }
 }
