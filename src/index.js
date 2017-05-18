@@ -18,8 +18,8 @@ export function createHorizontalStrength(_buffer) {
     if (inBox) {
       if (point.x < x + buffer) {
         return (point.x - x - buffer) / buffer;
-      } else if (point.x > (x + w - buffer)) {
-        return -(x + w - point.x - buffer) / buffer;
+      } else if (point.x > ((x + w) - buffer)) {
+        return -((x + w) - point.x - buffer) / buffer;
       }
     }
 
@@ -36,8 +36,8 @@ export function createVerticalStrength(_buffer) {
     if (inBox) {
       if (point.y < y + buffer) {
         return (point.y - y - buffer) / buffer;
-      } else if (point.y > (y + h - buffer)) {
-        return -(y + h - point.y - buffer) / buffer;
+      } else if (point.y > ((y + h) - buffer)) {
+        return -((y + h) - point.y - buffer) / buffer;
       }
     }
 
@@ -109,7 +109,7 @@ export default function createScrollingComponent(WrappedComponent) {
         this.attach();
         this.updateScrolling(evt);
       }
-    }
+    };
 
     handleMonitorChange() {
       const isDragging = this.context.dragDropManager.getMonitor().isDragging();
@@ -136,7 +136,7 @@ export default function createScrollingComponent(WrappedComponent) {
 
     // Update scaleX and scaleY every 100ms or so
     // and start scrolling if necessary
-    updateScrolling = throttle(evt => {
+    updateScrolling = throttle((evt) => {
       const { left: x, top: y, width: w, height: h } = this.container.getBoundingClientRect();
       const box = { x, y, w, h };
       const coords = getCoords(evt);
@@ -149,7 +149,7 @@ export default function createScrollingComponent(WrappedComponent) {
       if (!this.frame && (this.scaleX || this.scaleY)) {
         this.startScrolling();
       }
-    }, 100, { trailing: false })
+    }, 100, { trailing: false });
 
     startScrolling() {
       let i = 0;
@@ -167,7 +167,7 @@ export default function createScrollingComponent(WrappedComponent) {
         // mousemove events from a container that also emits a scroll
         // event that same frame. So we double the strengthMultiplier and only adjust
         // the scroll position at 30fps
-        if (i++ % 2) {
+        if (i++ % 2) { // eslint-disable-line no-plusplus
           const {
             scrollLeft,
             scrollTop,
@@ -181,7 +181,7 @@ export default function createScrollingComponent(WrappedComponent) {
             ? container.scrollLeft = intBetween(
               0,
               scrollWidth - clientWidth,
-              scrollLeft + scaleX * strengthMultiplier
+              scrollLeft + (scaleX * strengthMultiplier),
             )
             : scrollLeft;
 
@@ -189,7 +189,7 @@ export default function createScrollingComponent(WrappedComponent) {
             ? container.scrollTop = intBetween(
               0,
               scrollHeight - clientHeight,
-              scrollTop + scaleY * strengthMultiplier
+              scrollTop + (scaleY * strengthMultiplier),
             )
             : scrollTop;
 
@@ -220,7 +220,7 @@ export default function createScrollingComponent(WrappedComponent) {
         horizontalStrength,
         onScrollChange,
 
-        ...props,
+        ...props
       } = this.props;
 
       return (
