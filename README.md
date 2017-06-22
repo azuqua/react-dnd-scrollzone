@@ -31,6 +31,8 @@ export default class App extends Component {
 }
 ```
 
+Note: You should replace the original `div` you would like to make scrollable with the `ScrollingComponent`. 
+
 ### Easing Example
 
 ```js
@@ -80,6 +82,7 @@ export default App(props) {
   );
 }
 ```
+Note: You should replace the original `div` you would like to make scrollable with the `ScrollingComponent`. 
 
 ### Virtualized Example
 
