@@ -60,6 +60,7 @@ export default function createScrollingComponent(WrappedComponent) {
       verticalStrength: PropTypes.func,
       horizontalStrength: PropTypes.func,
       strengthMultiplier: PropTypes.number,
+      scrollingElement: PropTypes.boolean,
     };
 
     static defaultProps = {
@@ -85,7 +86,7 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     componentDidMount() {
-      this.container = findDOMNode(this.wrappedInstance);
+      this.container = this.props.scrollingElement ? document.scrollingElement : findDOMNode(this.wrappedInstance);
       this.container.addEventListener('dragover', this.handleEvent);
       // touchmove events don't seem to work across siblings, so we unfortunately
       // have to attach the listeners to the body
@@ -109,7 +110,7 @@ export default function createScrollingComponent(WrappedComponent) {
         this.attach();
         this.updateScrolling(evt);
       }
-    }
+    };
 
     handleMonitorChange() {
       const isDragging = this.context.dragDropManager.getMonitor().isDragging();
@@ -138,7 +139,15 @@ export default function createScrollingComponent(WrappedComponent) {
     // and start scrolling if necessary
     updateScrolling = throttle(evt => {
       const { left: x, top: y, width: w, height: h } = this.container.getBoundingClientRect();
-      const box = { x, y, w, h };
+      const box = this.props.scrollingElement ?
+        {
+          x: 0,
+          y: 0,
+          w: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
+          h: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
+        } :
+        { x, y, w, h }
+      ;
       const coords = getCoords(evt);
 
       // calculate strength
@@ -219,6 +228,7 @@ export default function createScrollingComponent(WrappedComponent) {
         verticalStrength,
         horizontalStrength,
         onScrollChange,
+        scrollingElement,
 
         ...props,
       } = this.props;
