@@ -60,7 +60,7 @@ export default function createScrollingComponent(WrappedComponent) {
       verticalStrength: PropTypes.func,
       horizontalStrength: PropTypes.func,
       strengthMultiplier: PropTypes.number,
-      scrollingElement: PropTypes.boolean,
+      scrollingElement: PropTypes.bool,
     };
 
     static defaultProps = {
