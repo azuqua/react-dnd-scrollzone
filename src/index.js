@@ -60,7 +60,7 @@ export default function createScrollingComponent(WrappedComponent) {
       verticalStrength: PropTypes.func,
       horizontalStrength: PropTypes.func,
       strengthMultiplier: PropTypes.number,
-      scrollingElement: PropTypes.bool,
+      scrollingElement: PropTypes.bool
     };
 
     static defaultProps = {
@@ -135,6 +135,14 @@ export default function createScrollingComponent(WrappedComponent) {
       window.document.body.removeEventListener('touchmove', this.updateScrolling);
     }
 
+    viewportHeight() {
+        return Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
+    }
+
+    viewportWidth() {
+      return Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
+    }
+
     // Update scaleX and scaleY every 100ms or so
     // and start scrolling if necessary
     updateScrolling = throttle(evt => {
@@ -143,8 +151,8 @@ export default function createScrollingComponent(WrappedComponent) {
         {
           x: 0,
           y: 0,
-          w: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
-          h: Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
+          w: this.viewportWidth(),
+          h: this.viewportHeight()
         } :
         { x, y, w, h }
       ;
@@ -152,13 +160,13 @@ export default function createScrollingComponent(WrappedComponent) {
 
       // calculate strength
       this.scaleX = this.props.horizontalStrength(box, coords);
-      this.scaleY = this.props.verticalStrength(box, coords);
+      this.scaleY = this.props.verticalStrength(box, coords); //console.log(this.frame, this.scaleX, this.scaleY)
 
       // start scrolling if we need to
       if (!this.frame && (this.scaleX || this.scaleY)) {
         this.startScrolling();
       }
-    }, 100, { trailing: false })
+    }, 100, { trailing: false });
 
     startScrolling() {
       let i = 0;
@@ -177,7 +185,7 @@ export default function createScrollingComponent(WrappedComponent) {
         // event that same frame. So we double the strengthMultiplier and only adjust
         // the scroll position at 30fps
         if (i++ % 2) {
-          const {
+          let {
             scrollLeft,
             scrollTop,
             scrollWidth,
@@ -185,6 +193,10 @@ export default function createScrollingComponent(WrappedComponent) {
             clientWidth,
             clientHeight,
           } = container;
+          if (this.props.scrollingElement) {
+              clientHeight = this.viewportHeight();
+              clientWidth = this.viewportWidth();
+          }
 
           const newLeft = scaleX
             ? container.scrollLeft = intBetween(
@@ -200,7 +212,7 @@ export default function createScrollingComponent(WrappedComponent) {
               scrollHeight - clientHeight,
               scrollTop + scaleY * strengthMultiplier
             )
-            : scrollTop;
+            : scrollTop; console.log(clientHeight, scrollHeight, scrollTop);
 
           onScrollChange(newLeft, newTop);
         }
