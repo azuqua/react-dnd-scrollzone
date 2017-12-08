@@ -53,7 +53,7 @@ const ITEMS = [1,2,3,4,5,6,7,8,9,10];
 // expects/returns a number between [0, 1], however strength functions
 // expects/returns a value between [-1, 1]
 function ease(val) {
-  const t = val / 2 + 1; // [-1, 1] -> [0, 1]
+  const t = (val + 1) / 2; // [-1, 1] -> [0, 1]
   const easedT = t<.5 ? 2*t*t : -1+(4-2*t)*t;
   return easedT * 2 - 1; // [0, 1] -> [-1, 1]
 }
