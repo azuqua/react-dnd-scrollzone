@@ -60,6 +60,7 @@ export default function createScrollingComponent(WrappedComponent) {
       verticalStrength: PropTypes.func,
       horizontalStrength: PropTypes.func,
       strengthMultiplier: PropTypes.number,
+      scrollContainer: PropTypes.instanceOf(typeof Element !== 'undefined' ? Element : Object),
     };
 
     static defaultProps = {
@@ -85,7 +86,7 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     componentDidMount() {
-      this.container = findDOMNode(this.wrappedInstance);
+      this.container = this.props.scrollContainer || findDOMNode(this.wrappedInstance);
       this.container.addEventListener('dragover', this.handleEvent);
       // touchmove events don't seem to work across siblings, so we unfortunately
       // have to attach the listeners to the body
