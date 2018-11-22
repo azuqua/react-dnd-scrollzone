@@ -3,6 +3,8 @@
   "version": "4.0.0",
   "description": "A cross browser solution to scrolling during drag and drop.",
   "main": "lib/index.js",
+  "typings": "typings/index.d.ts",
+  "sideEffects": false,
   "scripts": {
     "build": "rm -rf lib && babel src --out-dir lib",
     "lint": "eslint src",
@@ -59,9 +61,15 @@
     "eslint-plugin-react": "^5.1.1",
     "in-publish": "^2.0.0",
     "mocha": "^2.3.4",
-    "react": "^15.1.0",
-    "react-dom": "^15.1.0",
     "sinon": "^1.17.2",
-    "sinon-chai": "^2.8.0"
+    "sinon-chai": "^2.8.0",
+    "react": "^16.5.0",
+    "react-dom": "^16.5.0",
+    "react-dnd": "^6.0.0"
+  },
+  "peerDependencies": {
+    "react": "15.1 - 16",
+    "react-dom": "15.1 - 16",
+    "react-dnd": "2 - 6"
   }
 }
