@@ -65,7 +65,7 @@
     "sinon-chai": "^2.8.0",
     "react": "^16.5.0",
     "react-dom": "^16.5.0",
-    "react-dnd": "^5.0.0"
+    "react-dnd": "^6.0.0"
   },
   "peerDependencies": {
     "react": "15.1 - 16",
