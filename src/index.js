@@ -11,7 +11,9 @@ import { noop, intBetween, getCoords } from './util';
 const DEFAULT_BUFFER = 150;
 
 export function createHorizontalStrength(_buffer) {
-  return function defaultHorizontalStrength({ x, w, y, h }, point) {
+  return function defaultHorizontalStrength({
+    x, w, y, h,
+  }, point) {
     const buffer = Math.min(w / 2, _buffer);
     const inRange = point.x >= x && point.x <= x + w;
     const inBox = inRange && point.y >= y && point.y <= y + h;
@@ -30,7 +32,9 @@ export function createHorizontalStrength(_buffer) {
 }
 
 export function createVerticalStrength(_buffer) {
-  return function defaultVerticalStrength({ y, h, x, w }, point) {
+  return function defaultVerticalStrength({
+    y, h, x, w,
+  }, point) {
     const buffer = Math.min(h / 2, _buffer);
     const inRange = point.y >= y && point.y <= y + h;
     const inBox = inRange && point.x >= x && point.x <= x + w;
