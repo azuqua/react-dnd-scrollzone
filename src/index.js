@@ -4,13 +4,16 @@ import { findDOMNode } from 'react-dom';
 import throttle from 'lodash.throttle';
 import raf from 'raf';
 import getDisplayName from 'react-display-name';
+import { Consumer as DragDropContextConsumer } from 'react-dnd/lib/DragDropContext';
 import hoist from 'hoist-non-react-statics';
 import { noop, intBetween, getCoords } from './util';
 
 const DEFAULT_BUFFER = 150;
 
 export function createHorizontalStrength(_buffer) {
-  return function defaultHorizontalStrength({ x, w, y, h }, point) {
+  return function defaultHorizontalStrength({
+    x, w, y, h,
+  }, point) {
     const buffer = Math.min(w / 2, _buffer);
     const inRange = point.x >= x && point.x <= x + w;
     const inBox = inRange && point.y >= y && point.y <= y + h;
@@ -18,7 +21,8 @@ export function createHorizontalStrength(_buffer) {
     if (inBox) {
       if (point.x < x + buffer) {
         return (point.x - x - buffer) / buffer;
-      } else if (point.x > (x + w - buffer)) {
+      }
+      if (point.x > (x + w - buffer)) {
         return -(x + w - point.x - buffer) / buffer;
       }
     }
@@ -28,7 +32,9 @@ export function createHorizontalStrength(_buffer) {
 }
 
 export function createVerticalStrength(_buffer) {
-  return function defaultVerticalStrength({ y, h, x, w }, point) {
+  return function defaultVerticalStrength({
+    y, h, x, w,
+  }, point) {
     const buffer = Math.min(h / 2, _buffer);
     const inRange = point.y >= y && point.y <= y + h;
     const inBox = inRange && point.x >= x && point.x <= x + w;
@@ -36,7 +42,8 @@ export function createVerticalStrength(_buffer) {
     if (inBox) {
       if (point.y < y + buffer) {
         return (point.y - y - buffer) / buffer;
-      } else if (point.y > (y + h - buffer)) {
+      }
+      if (point.y > (y + h - buffer)) {
         return -(y + h - point.y - buffer) / buffer;
       }
     }
@@ -50,12 +57,13 @@ export const defaultHorizontalStrength = createHorizontalStrength(DEFAULT_BUFFER
 export const defaultVerticalStrength = createVerticalStrength(DEFAULT_BUFFER);
 
 
-export default function createScrollingComponent(WrappedComponent) {
+export function createScrollingComponent(WrappedComponent) {
   class ScrollingComponent extends Component {
-
     static displayName = `Scrolling(${getDisplayName(WrappedComponent)})`;
 
     static propTypes = {
+      // eslint-disable-next-line react/forbid-prop-types
+      dragDropManager: PropTypes.object.isRequired,
       onScrollChange: PropTypes.func,
       verticalStrength: PropTypes.func,
       horizontalStrength: PropTypes.func,
@@ -69,12 +77,32 @@ export default function createScrollingComponent(WrappedComponent) {
       strengthMultiplier: 30,
     };
 
-    static contextTypes = {
-      dragDropManager: PropTypes.object,
-    };
+    // Update scaleX and scaleY every 100ms or so
+    // and start scrolling if necessary
+    updateScrolling = throttle((evt) => {
+      const {
+        left: x, top: y, width: w, height: h,
+      } = this.container.getBoundingClientRect();
+      const box = {
+        x, y, w, h,
+      };
+      const coords = getCoords(evt);
+
+      // calculate strength
+      const { horizontalStrength, verticalStrength } = this.props;
+      this.scaleX = horizontalStrength(box, coords);
+      this.scaleY = verticalStrength(box, coords);
+
+      // start scrolling if we need to
+      if (!this.frame && (this.scaleX || this.scaleY)) {
+        this.startScrolling();
+      }
+    }, 100, { trailing: false })
 
     constructor(props, ctx) {
       super(props, ctx);
+
+      this.wrappedInstance = React.createRef();
 
       this.scaleX = 0;
       this.scaleY = 0;
@@ -85,16 +113,17 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     componentDidMount() {
-      this.container = findDOMNode(this.wrappedInstance);
+      // eslint-disable-next-line react/no-find-dom-node
+      this.container = findDOMNode(this.wrappedInstance.current);
       this.container.addEventListener('dragover', this.handleEvent);
       // touchmove events don't seem to work across siblings, so we unfortunately
       // have to attach the listeners to the body
       window.document.body.addEventListener('touchmove', this.handleEvent);
 
-      this.clearMonitorSubscription = this.context
-          .dragDropManager
-          .getMonitor()
-          .subscribeToStateChange(() => this.handleMonitorChange());
+      const { dragDropManager } = this.props;
+      this.clearMonitorSubscription = dragDropManager
+        .getMonitor()
+        .subscribeToStateChange(() => this.handleMonitorChange());
     }
 
     componentWillUnmount() {
@@ -112,7 +141,8 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     handleMonitorChange() {
-      const isDragging = this.context.dragDropManager.getMonitor().isDragging();
+      const { dragDropManager } = this.props;
+      const isDragging = dragDropManager.getMonitor().isDragging();
 
       if (!this.dragging && isDragging) {
         this.dragging = true;
@@ -134,23 +164,6 @@ export default function createScrollingComponent(WrappedComponent) {
       window.document.body.removeEventListener('touchmove', this.updateScrolling);
     }
 
-    // Update scaleX and scaleY every 100ms or so
-    // and start scrolling if necessary
-    updateScrolling = throttle(evt => {
-      const { left: x, top: y, width: w, height: h } = this.container.getBoundingClientRect();
-      const box = { x, y, w, h };
-      const coords = getCoords(evt);
-
-      // calculate strength
-      this.scaleX = this.props.horizontalStrength(box, coords);
-      this.scaleY = this.props.verticalStrength(box, coords);
-
-      // start scrolling if we need to
-      if (!this.frame && (this.scaleX || this.scaleY)) {
-        this.startScrolling();
-      }
-    }, 100, { trailing: false })
-
     startScrolling() {
       let i = 0;
       const tick = () => {
@@ -167,7 +180,8 @@ export default function createScrollingComponent(WrappedComponent) {
         // mousemove events from a container that also emits a scroll
         // event that same frame. So we double the strengthMultiplier and only adjust
         // the scroll position at 30fps
-        if (i++ % 2) {
+        i += 1;
+        if (i % 2) {
           const {
             scrollLeft,
             scrollTop,
@@ -181,7 +195,7 @@ export default function createScrollingComponent(WrappedComponent) {
             ? container.scrollLeft = intBetween(
               0,
               scrollWidth - clientWidth,
-              scrollLeft + scaleX * strengthMultiplier
+              scrollLeft + scaleX * strengthMultiplier,
             )
             : scrollLeft;
 
@@ -189,7 +203,7 @@ export default function createScrollingComponent(WrappedComponent) {
             ? container.scrollTop = intBetween(
               0,
               scrollHeight - clientHeight,
-              scrollTop + scaleY * strengthMultiplier
+              scrollTop + scaleY * strengthMultiplier,
             )
             : scrollTop;
 
@@ -220,12 +234,12 @@ export default function createScrollingComponent(WrappedComponent) {
         horizontalStrength,
         onScrollChange,
 
-        ...props,
+        ...props
       } = this.props;
 
       return (
         <WrappedComponent
-          ref={(ref) => { this.wrappedInstance = ref; }}
+          ref={this.wrappedInstance}
           {...props}
         />
       );
@@ -233,4 +247,17 @@ export default function createScrollingComponent(WrappedComponent) {
   }
 
   return hoist(ScrollingComponent, WrappedComponent);
+}
+
+export default function createScrollingComponentWithConsumer(WrappedComponent) {
+  const ScrollingComponent = createScrollingComponent(WrappedComponent);
+  return props => (
+    <DragDropContextConsumer>
+      {({ dragDropManager }) => (
+        dragDropManager === undefined
+          ? null
+          : <ScrollingComponent {...props} dragDropManager={dragDropManager} />
+      )}
+    </DragDropContextConsumer>
+  );
 }
