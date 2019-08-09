@@ -1,5 +1,8 @@
 # Changelog
 
+### `v5.0.0`
+* Added React 16 support
+
 ### `v4.0.0`
 * Change `speed` prop to `strengthMultiplier`
 * Adds a hard dependency on using `react-dnd` which was theoretically
