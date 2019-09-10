@@ -66,10 +66,10 @@ function vStrength(box, point) {
   return ease(linearVerticalStrength(box, point));
 }
 
-export default App(props) {
+export default function App(props) {
   return (
     <DragDropContextProvider backend={HTML5Backend}>
-      <ScrollingComponent
+      <ScrollZone
         className="App"
         verticalStrength={vStrength}
         horizontalStrength={hStrength} >
@@ -77,7 +77,7 @@ export default App(props) {
         {ITEMS.map(n => (
           <DragItem key={n} label={`Item ${n}`} />
         ))}
-      </ScrollingComponent>
+      </ScrollZone>
     </DragDropContextProvider>
   );
 }
