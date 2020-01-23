@@ -1,4 +1,5 @@
-import React, { Component } from 'react';
+import React, { Component, createContext } from 'react';
+import { Consumer as DragDropContextConsumer } from 'react-dnd/lib/DragDropContext';
 import PropTypes from 'prop-types';
 import { findDOMNode } from 'react-dom';
 import throttle from 'lodash.throttle';
@@ -8,6 +9,20 @@ import hoist from 'hoist-non-react-statics';
 import { noop, intBetween, getCoords } from './util';
 
 const DEFAULT_BUFFER = 150;
+
+const useNewContextApi = createContext !== undefined && DragDropContextConsumer !== undefined;
+
+function createDragDropMonitorWrapper(WrappedComponent) {
+  return function DragDropMonitorWrapper(props) {
+    return (
+      <DragDropContextConsumer>
+        {({ dragDropManager }) =>
+          <WrappedComponent {...props} dragDropManager={dragDropManager} />
+        }
+      </DragDropContextConsumer>
+    );
+  };
+}
 
 export function createHorizontalStrength(_buffer) {
   return function defaultHorizontalStrength({ x, w, y, h }, point) {
@@ -60,6 +75,7 @@ export default function createScrollingComponent(WrappedComponent) {
       verticalStrength: PropTypes.func,
       horizontalStrength: PropTypes.func,
       strengthMultiplier: PropTypes.number,
+      getScrollContainer: PropTypes.func,
     };
 
     static defaultProps = {
@@ -69,9 +85,11 @@ export default function createScrollingComponent(WrappedComponent) {
       strengthMultiplier: 30,
     };
 
-    static contextTypes = {
-      dragDropManager: PropTypes.object,
-    };
+    static contextTypes = useNewContextApi
+      ? undefined
+      : {
+        dragDropManager: PropTypes.object,
+      };
 
     constructor(props, ctx) {
       super(props, ctx);
@@ -85,14 +103,15 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     componentDidMount() {
-      this.container = findDOMNode(this.wrappedInstance);
+      const { getScrollContainer } = this.props;
+      const wrappedNode = findDOMNode(this.wrappedInstance);
+      this.container = getScrollContainer ? getScrollContainer(wrappedNode) : wrappedNode;
       this.container.addEventListener('dragover', this.handleEvent);
       // touchmove events don't seem to work across siblings, so we unfortunately
       // have to attach the listeners to the body
       window.document.body.addEventListener('touchmove', this.handleEvent);
 
-      this.clearMonitorSubscription = this.context
-          .dragDropManager
+      this.clearMonitorSubscription = this.getDragDropManager()
           .getMonitor()
           .subscribeToStateChange(() => this.handleMonitorChange());
     }
@@ -104,6 +123,12 @@ export default function createScrollingComponent(WrappedComponent) {
       this.stopScrolling();
     }
 
+    getDragDropManager() {
+      return useNewContextApi
+        ? this.props.dragDropManager
+        : this.context.dragDropManager;
+    }
+
     handleEvent = (evt) => {
       if (this.dragging && !this.attached) {
         this.attach();
@@ -112,7 +137,7 @@ export default function createScrollingComponent(WrappedComponent) {
     }
 
     handleMonitorChange() {
-      const isDragging = this.context.dragDropManager.getMonitor().isDragging();
+      const isDragging = this.getDragDropManager().getMonitor().isDragging();
 
       if (!this.dragging && isDragging) {
         this.dragging = true;
@@ -230,6 +255,11 @@ export default function createScrollingComponent(WrappedComponent) {
         />
       );
     }
+  }
+
+  if (useNewContextApi) {
+    const DragDropMonitorWrapper = createDragDropMonitorWrapper(ScrollingComponent);
+    return hoist(DragDropMonitorWrapper, WrappedComponent);
   }
 
   return hoist(ScrollingComponent, WrappedComponent);
