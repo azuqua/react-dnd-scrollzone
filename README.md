@@ -12,7 +12,7 @@ import withScrolling from 'react-dnd-scrollzone';
 import DragItem from './DragItem';
 import './App.css';
 
-const ScrollingComponent = withScrolling('div');
+const ScrollZone = withScrolling('div');
 
 const ITEMS = [1,2,3,4,5,6,7,8,9,10];
 
@@ -20,18 +20,18 @@ export default class App extends Component {
   render() {
     return (
       <DragDropContextProvider backend={HTML5Backend}>
-        <ScrollingComponent className="App">
+        <ScrollZone className="App">
           {ITEMS.map(n => (
             <DragItem key={n} label={`Item ${n}`} />
           ))}
-        </ScrollingComponent>
+        </ScrollZone>
       </DragDropContextProvider>
     );
   }
 }
 ```
 
-Note: You should replace the original `div` you would like to make scrollable with the `ScrollingComponent`. 
+Note: You should replace the original `div` you would like to make scrollable with the `ScrollZone`. 
 
 ### Easing Example
 
@@ -69,7 +69,7 @@ function vStrength(box, point) {
 export default App(props) {
   return (
     <DragDropContextProvider backend={HTML5Backend}>
-      <ScrollingComponent
+      <ScrollZone
         className="App"
         verticalStrength={vStrength}
         horizontalStrength={hStrength} >
@@ -77,12 +77,12 @@ export default App(props) {
         {ITEMS.map(n => (
           <DragItem key={n} label={`Item ${n}`} />
         ))}
-      </ScrollingComponent>
+      </ScrollZone>
     </DragDropContextProvider>
   );
 }
 ```
-Note: You should replace the original `div` you would like to make scrollable with the `ScrollingComponent`. 
+Note: You should replace the original `div` you would like to make scrollable with the `ScrollZone`. 
 
 ### Virtualized Example
 
